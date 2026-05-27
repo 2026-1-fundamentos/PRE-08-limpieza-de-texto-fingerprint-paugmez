@@ -8,55 +8,42 @@
 # Referencia:
 # https://openrefine.org/docs/technical-reference/clustering-in-depth
 # 
-import nltk #type: ignore
-import pandas as pd #type: ignore
+import nltk 
+import pandas as pd 
 
 
 def load_data(input_file):
-    """Lea el archivo usando pandas y devuelva un DataFrame."""
+    """Lea el archivo usando pandas y devuelva un DataFrame"""
 
+    #
+    # Esta parte es igual al taller anterior
+    #
     df = pd.read_csv(input_file)
     return df
 
 
-def create_normalized_key(df):
-    """Cree una nueva columna en el DataFrame que contenga 
-    el key de la columna 'raw_text"""
-    
+def create_key(df, n):
+    """Cree una nueva columna en el DataFrame que contenga el key de la
+    columna 'text'"""
+
     df = df.copy()
-    
-    # Copie la columna 'text' a la columna 'key'
     df["key"] = df["raw_text"]
-    
-    # Remueva los espacios en blanco al inicio y al final de la cadena
     df["key"] = df["key"].str.strip()
-    
-    # Convierta el texto a minúscula
     df["key"] = df["key"].str.lower()
-    
-    # Transforme palabras que pueden (o no) contener guiones por su
-    # version sin guion (este paso es redundante por la linea siguiente.
-    # Pero es claro anotar la existencia de palabras con y sin '-'.
     df["key"] = df["key"].str.replace("-", "")
-    
-    # Remueva puntuacion y caracteres de control
     df["key"] = df["key"].str.translate(
         str.maketrans("", "", "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
     )
-    
-    # Convierta el texto a una lista de tokens
     df["key"] = df["key"].str.split()
+
     
     # Transforme cada palabra con un stemmer de Porter
-    stemmer = nltk.PorterStemmer()
+    stemmer = nltk.stem.PorterStemmer()
     df["key"] = df["key"].apply(lambda x: [stemmer.stem(word) for word in x])
     
-    # Ordene la lista de tokens y remueve duplicados
     df["key"] = df["key"].apply(lambda x: sorted(set(x)))
     
-    # Convierta la lista de tokens a una cadena de texto separada por espacios
-    df["key"] = df["key"].str.join("")
-    
+    df["key"] = df["key"].str.join(" ")
     return df
 
 
@@ -82,24 +69,29 @@ def generate_cleaned_text(df):
 
 def save_data(df, output_file):
     """Guarda el DataFrame en un archivo"""
-    
+    #
+    # Este código es identico al anteior
+    #
     df = df.copy()
     df = df[["raw_text", "cleaned_text"]]
     df.to_csv(output_file, index=False)
-    
-    
-def main(input_file, output_file):
-    """Ejecuta la limpieza de datos"""
 
+
+def main(input_file, output_file, n=2):
+    """Ejecuta la limpieza de datos"""
+    #
+    # Este código es identico al anteior
+    #
     df = load_data(input_file)
-    df = create_normalized_key(df)
+    df = create_key(df, n)
     df = generate_cleaned_text(df)
     df.to_csv("files/test.csv", index=False)
     save_data(df, output_file)
-    
+
 
 if __name__ == "__main__":
     main(
-        input_file = "files/input.txt",
-        output_file = "files/output.txt"
+        input_file="files/input.txt",
+        output_file="files/output.txt",
     )
+
